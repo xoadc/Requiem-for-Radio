@@ -1,0 +1,79 @@
+(
+~spacer =Proto({
+	~server = Server.default;
+	forkIfNeeded {
+		SynthDef(\spacer, {
+			arg out=0, in=50, pos=0;
+			In.ar();
+			var sig, env;
+			env = EnvGen.kr(Env.asr(atk,1,rel, curve:\sqr), gate, amp);
+			sig = PlayBufCF.ar(
+				1,
+				bufnum,
+				BufRateScale.kr(bufnum),
+				trigger: LFPulse.kr((BufDur.kr(bufnum) - 10.0).reciprocal),
+				lag: 8);
+			Out.ar(out,sig * env);
+		}).add;
+		~server.sync;
+	};
+	~initialize = { |id|
+		forkIfNeeded {
+			~sfNumChan = 1;
+			~touched = 0;
+			~towerID = id;
+			~outBus = Bus.audio(~server, 1);
+			~towerIP = "192.168.0." ++ ~towerID.ascii;
+			~sfPaths = (
+				"../../media/".resolveRelative ++ ~towerID ++ "_extra/*.wav").pathMatch;
+			~sfPaths.addFirst(
+				"../../media/".resolveRelative ++ ~towerID ++ "_tower.wav");
+			~buffers = ~sfPaths.collect({ |i|
+				Buffer.read(~server, i);
+			});
+			~oscRaw = OSCFunc({|msg|
+				
+				// msg.postln;
+			}, "/raw", NetAddr(~towerIP, 50202), 50101);
+			~oscTouch = OSCFunc({|msg|
+				var val;
+				val = (msg[1] & 0xFFF).asBoolean; // filter out proximity on bit 13
+				(val != ~touched).if({
+					~touched = val;
+					~touched.if({
+						~play.value;
+					},{
+						~stop.value;
+					})
+				});
+			}.inEnvir, "/touch", NetAddr(~towerIP, 50202), 50101);
+			~synth = Synth.tail(~server, \towerLooper,[
+				\out, ~outBus,
+				\bufnum,  ~buffers[0],
+				\atk, 5,
+				\rel, 6,
+				\amp, 1.0
+			]);
+		};
+		currentEnvironment;
+	};
+	~play = {
+		~synth.set(\gate, 1);
+		("Tower " ++ ~towerID ++ " touched.").postln;
+
+	};
+
+	~stop = {
+		~synth.set(\gate, 0);
+		("Tower " ++ ~towerID ++ " released.").postln;
+	};
+	
+	~free = {
+		~synth.free;
+		~buffers.do(_.free);
+		~oscRaw.free;
+		~oscTouch.free;
+
+	};
+});
+)

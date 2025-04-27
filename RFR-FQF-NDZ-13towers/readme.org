@@ -1,0 +1,31 @@
+
+* Description
+  The code in this repository is used in an outdoor intallation by
+  Amanda Dawn Christie.  The piece is an hommage to the 13 short wave
+  emission towers that were in Sackville, NB.  It is (to a certain
+  extent) a scale model of the Sackville towers.  The first version
+  will be set on a small hill by the boardwalk of the Halifax Harbour.
+  Each tower has a speaker.  When a visitor touches (or ideally,
+  approaches) one of the towers, a sound is played back.
+
+* Technical overview
+  Each tower has a Wifi module (ESP8266) and capacitive sensing chip
+  (MPR121).  The MPR121 is an i2c device on which 12 electrodes can be
+  attached.  Each electrode is automatically calibrated (at boot time)
+  to detect touch.  There is a virtuel 13th electrode that combines
+  all 12 electrodes (or just 2 or 4 -- this is configurable) to detect
+  proximity.
+
+  The MPR121 is connected to a Huzzah board (made my Adafruit).  The
+  main component of that board is the ESP8266 chip.  Each of the 13
+  ESP8266 connects to router and sends its sensor data via OSC over
+  UDP.
+
+  - i2c is on pins 4 and 5
+    - SDA :: 4
+    - SCL :: 5
+  - For IRQ, I use pin 13
+  - UDP Port :: 50101
+  - SSID :: JAWifi-bgn (temporary)
+  - Password :: #Narwhals<3 (temporary)
+    

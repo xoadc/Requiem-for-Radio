@@ -1,0 +1,31 @@
+~testTone = {SinOsc.ar([220,330], 0, 0.01)}.play;
+
+~testTone.free;
+
+(
+fork {
+	"./prep/01-tower.scd".loadRelative;
+	
+	~towers = [$C, $D, $E, $F, $H, $I, $J, $K, $M, $N, $O, $P, $Q].collect({arg i; ~tower.new(i, "../media/") });
+	s.sync;
+	"./prep/02-spacer.scd".loadRelative;
+	~spacer = ~spacer.new(~towers);
+	~spacer.route;
+	~spacer.spread;
+}
+)
+
+(
+~towers.do(_.free);
+~spacer.do(_.free);
+)
+
+
+~towers[12].play;
+~towers[12].stop;
+
+
+
+
+[ $Q ].ascii
+[ 81 ]
