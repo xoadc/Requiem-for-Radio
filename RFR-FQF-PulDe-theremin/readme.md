@@ -1,15 +1,33 @@
 # RFR-FQF-PulDe (Pulse Decay)
 
+### Version 4
+## Amanda Dawn Christie, Martin Marier, and John Janigan-Mills
+
 # Overview
 
 This folder contains all the files for the Requiem for Radio: Pulse Decay performance.
-The performer plays the theremin on stage. Behind her, blueprintlike
+The performer plays the theremin on stage. Behind her, blueprint-esque
 images of the Sackville radio towers are projected. The sounds of the
 corresponding radio tower is played back on speakers.
 The theremin can play actual theremin sounds, but it is also used to
-select and crossfade between the 13 radio towers.
+select and crossfade between the 13 radio towers and their associated sounds and images.
 
-# Running the Code
+# Running the Raspberry Pi
+Plug in all peripherals to the Pi before plugging in the power.
+
+Plug both of these devices into the USB2 ports (grey):
+- USB-C Headphone Dongle with USB-C to USB-A adapter
+- Metal Arduino box
+
+Use the Micro HDMI port closest to the USB-C power connection for the video feed.
+
+Use the provided single USB-C power brick provided for the power.
+
+When powered on, the Pi should automatically boot itself without user input; give it about a minute to complete it's boot routine.
+
+To reboot, simply use the power button (by the SD card reader on the Pi), or pull out the power cord (less ideal but still fine).
+
+# Running the Code on your own device
 
 ## Arduino
 Just plug in the box via USB and you're good!
