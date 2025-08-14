@@ -1,0 +1,146 @@
+#+TITLE: Requiem for Radio -- New Dead Zones
+#+SUBTITLE: README 
+* Description
+  The code in this repository is used in an outdoor sound sculpture
+  titled /Requiem for Radio: New Dead Zones/ by Amanda Dawn Christie.
+  The piece is an hommage to the 13 shortwave emission towers that
+  were in Sackville, NB.  The piece is a scale model of the Sackville
+  towers.  The first version was set on a small hill by the boardwalk
+  of the Halifax Harbour, next to the Sands at Salter, on October
+  15 2016.
+
+  When a visitor touches one of the sensors (one of the copper sponges
+  or the copper pipe) on a tower, a sound is played back on a speaker
+  positionned right next to it.
+
+* Technical overview
+  Each tower is equipped with a Wifi module (an ESP8266 on a Huzzah
+  break out board, as distributed by Adafruit) and a capacitive
+  sensing chip (MPR121, also on a break out board distributed by
+  Adafruit).  The MPR121 is an i2c device on which 12 electrodes can
+  be attached.  Each electrode is automatically calibrated (at boot
+  time) to detect touch.
+
+  The SDA and SCL pins of the MPR121 are connected to the Huzzah board
+  pins 4 and 5.
+
+  - i2c is on pins 4 and 5
+    - SDA : 4
+    - SCL : 5
+  - The IRQ is not used.
+  - UDP output port : 50101
+  - UDP input port (can be used to configure the MPR121) : 50202 
+  - SSID : ndz
+  - Password : requiemforradionewdeadzones
+
+  The touch data and the raw data of each sensor is sent to a computer
+  over Wifi (OSC messages over UDP) via a Wifi router.  On the
+  computer (a mac mini), a SuperCollider program receives the OSC
+  messages and plays soundfiles on the appropriate speaker.
+
+  To get 13 analog audio outputs, two MOTU Ultralite AVB were used.
+  The master card was the MOTU /adc/ (Amanda's card) and the slave
+  card was the MOTU /mm/ (Martin's card).  The cards were combined
+  over AVB using a short cat-5 ethernet cable.
+
+* Router configuration
+  The router is already configured, but to make modifications, connect
+  to it normally and, in a browser, enter =192.168.0.1= in the URL
+  bar.  To log into the router's configuration tool, use these:
+
+  - User :: admin
+  - Password :: Gq6ZaNRS5ICXw6UNqag8JiTKOGFfUf4T
+
+  The router is configured to assign a specific IP address to each
+  tower using IP reservation tables.
+
+| Tower |   IP address | Audio output |
+|-------+--------------+--------------|
+| C     | 192.168.0.67 | MOTU adc L   |
+| D     | 192.168.0.68 | MOTU adc R   |
+| E     | 192.168.0.69 | MOTU adc 1   |
+| F     | 192.168.0.70 | MOTU adc 2   |
+| H     | 192.168.0.71 | MOTU adc 3   |
+| I     | 192.168.0.73 | MOTU adc 4   |
+| J     | 192.168.0.74 | MOTU adc 5   |
+| K     | 192.168.0.75 | MOTU adc 6   |
+| M     | 192.168.0.77 | MOTU mm L    |
+| N     | 192.168.0.78 | MOTU mm R    |
+| O     | 192.168.0.79 | MOTU mm 1    |
+| P     | 192.168.0.80 | MOTU mm 2    |
+| Q     | 192.168.0.81 | MOTU mm 3    |
+
+  The last byte of the IP address corresponds to the ascii character
+  of the tower (capitalized).  This allows the SuperCollider program to
+  identify each tower and to easily print the tower letter while
+  debugging or testing.
+
+* Tower configuration and behavior
+  When a tower (an ESP8266) boots, it looks for the =ndz= SSID and
+  tries to connect to it.  If the connection fails (because the router
+  was turned off or is out of range), the tower will have to be power
+  cycled.
+
+  Once the connection is established, the tower starts sending UDP
+  packets.  These UDP packets contain OSC messages.
+
+** OSC messages
+   Two types of messages are sent:
+   - /touch :: one 32-bit integer (only 13 bits are used).  Each bit
+        is the touch status of each electrode.  Only four electrodes
+        were used, but all 13 were enabled on the MPR121 and all the
+        data was sent anyway.
+   - /raw :: 13 32-bit integers (only 10 bits are used for
+        each). These numbers are the raw values of the voltages (the
+        inverse of the capacitance) measured for each electrode.
+
+   These messages are sent every 10 ms as long as the ESP8266 is
+   powered.  If the connection to the router is lost (if the router is
+   rebooted, for example), the towers have to be rebooted so they can
+   reconnect to it.
+
+   Port 50101 is used for OSC messages.
+
+** Copper pads
+   There are four copper pads on each tower.  They should be connected
+   to the pins 0, 1, 2 and 3 of the MPR121 chip (even if, at this
+   point, it does not affect the behavior).  The chip calibrates
+   itself when it is powered on.  This means that the pads shoud be
+   connected to the chip before it is turned on.  No matter what,
+   power cycling the unit is the proper way to recalibrate it.
+
+   All the touch information is sent to SuperCollider, but the SC code
+   does note differentiate between each copper pad.  If any pad is
+   touched, the audio (of a specific tower) is played back.
+
+* SuperCollider code
+  =main.scd= contains the code to execute to run RFR.NDZ.
+
+  /TODO: find out and list the dependancies (quarks or other)./
+
+  Executing the first line runs a test tone.  13 different test tones
+  are output through the 13 first outputs of the sound card.  The
+  tones are all sine waves at -20 dBFS; the pitches are MIDI notes 60
+  through 72.  This makes it easy to check if the speakers are wired
+  properly.
+
+  RFR.NDZ is ran by executing the code between the parentheses.
+
+** Changing attack time
+   *To be written.*
+
+** AM synthesis and calibration 
+   *To enhance.*
+   
+   Uses the raw voltage of the pad connected to pin 0 to change the
+   modulation frequency of a simple AM synth.
+   
+   A calibration is required for this to work properly.
+   
+   - Turn calibration on (on a specific tower or on all of them).
+   - Touch all the pads (firmly).
+   - Turn calibration off.
+
+   AM synthesis should only be turned on after calibration is done
+   (and switched off).
+   
